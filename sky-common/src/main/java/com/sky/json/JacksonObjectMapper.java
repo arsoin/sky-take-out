@@ -21,6 +21,7 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKN
  * 对象映射器:基于jackson将Java对象转为json，或者将json转为Java对象
  * 将JSON解析为Java对象的过程称为 [从JSON反序列化Java对象]
  * 从Java对象生成JSON的过程称为 [序列化Java对象到JSON]
+ * 这个都是固定的代码
  */
 public class JacksonObjectMapper extends ObjectMapper {
 
@@ -38,9 +39,13 @@ public class JacksonObjectMapper extends ObjectMapper {
         this.getDeserializationConfig().withoutFeatures(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
         SimpleModule simpleModule = new SimpleModule()
+                //这样就可以让json对象变java对象
+                //设置了反序列化器
                 .addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(DEFAULT_DATE_TIME_FORMAT)))
                 .addDeserializer(LocalDate.class, new LocalDateDeserializer(DateTimeFormatter.ofPattern(DEFAULT_DATE_FORMAT)))
                 .addDeserializer(LocalTime.class, new LocalTimeDeserializer(DateTimeFormatter.ofPattern(DEFAULT_TIME_FORMAT)))
+                //这样就可以让 java 对象变 json对象
+                //设置了序列化器
                 .addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(DateTimeFormatter.ofPattern(DEFAULT_DATE_TIME_FORMAT)))
                 .addSerializer(LocalDate.class, new LocalDateSerializer(DateTimeFormatter.ofPattern(DEFAULT_DATE_FORMAT)))
                 .addSerializer(LocalTime.class, new LocalTimeSerializer(DateTimeFormatter.ofPattern(DEFAULT_TIME_FORMAT)));
