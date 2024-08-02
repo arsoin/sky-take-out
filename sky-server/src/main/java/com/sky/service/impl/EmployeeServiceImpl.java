@@ -116,7 +116,22 @@ public class EmployeeServiceImpl implements EmployeeService {
         long total = page.getTotal();
         List<Employee> result = page.getResult();
         return new PageResult(total, result);
+    }
 
+    /**
+     * 启用禁用员工账号
+     * @param status
+     * @param id
+     */
+    @Override
+    public void startOrStop(Integer status, Long id) {
+        //因为这就相当于一个更新操作，然后如果这个跟新只用于跟新员工账号的禁用或启用，那么有点浪费
+        //因此可以把这个update写成动态sql，这样可以根据传进来的id 跟新你想跟新的任何信息
+        //因此需要先把实体类new出来,这是传统操作
+        //Employee employee = new Employee();
 
+        //因为Employee类上加了@builder这个注解，因此可以直接构建，且设置好属性值
+        Employee employee =  Employee.builder().status(status).id(id).build();
+        employeeMapper.update(employee);
     }
 }
