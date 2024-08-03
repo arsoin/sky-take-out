@@ -31,7 +31,7 @@
             #{id}
         </foreach>
     </delete>
-    <update id="update">
+    <update id="update" parameterType="Dish">
         update dish
         <set>
             <if test="name != null and name != ''">name = #{name},</if>
