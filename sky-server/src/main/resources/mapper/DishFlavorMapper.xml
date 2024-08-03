@@ -3,10 +3,16 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.sky.mapper.DishFlavorMapper">
     <!--这里因为刚一插入，就会生成他对应的主键id值，而我们需要这个值，因此需要让他赶紧返回过来，useGeneratedKeys="true" keyColumn="id"-->
-    <insert id="insertBatch" useGeneratedKeys="true" keyColumn="id">
+    <insert id="insertBatch">
         insert into dish_flavor(dish_id,name,value) values 
         <foreach collection="flavors" item="df" separator=",">
             (#{df.dishId},#{df.name},#{df.value})
         </foreach>
     </insert>
+    <delete id="delteByDishIds">
+        delete from dish_flavor where dish_id in
+        <foreach collection="DishIds" close=")" open="(" separator="," item="DishId">
+            #{DishId}
+        </foreach>
+    </delete>
 </mapper>

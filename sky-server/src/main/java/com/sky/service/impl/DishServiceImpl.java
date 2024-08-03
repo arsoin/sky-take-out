@@ -101,11 +101,52 @@ public class DishServiceImpl implements DishService {
             //当前菜品被套餐关联了，不允许删除
             throw new DeletionNotAllowedException(MessageConstant.DISH_BE_RELATED_BY_SETMEAL);
         }
-        //删除当前菜品
-        for (long id : ids) {
-            dishMapper.DeleteById(id);
-            //当前菜品是否包含口味，如果包含，则口味一并删除
-            dishFlavorMapper.DelteByDishId(id);
+        //删除当前菜品  ，由于这里是for循环，因此每循环一次都要发起2条sql，如果次数多了，那么性能会有问题。
+//        for (long id : ids) {
+//            dishMapper.DeleteById(id);
+//            //当前菜品是否包含口味，如果包含，则口味一并删除
+//            dishFlavorMapper.DelteByDishId(id);
+//        }
+        //因此这里采用批量删除
+        dishMapper.DeleteByIds(ids);
+        dishFlavorMapper.delteByDishIds(ids);
+    }
+
+    /**
+     * 根据id来查询菜品和对应的口味数据
+     * @param id
+     * @return
+     */
+    @Override
+    public DishVO getByIdWithFlavor(Long id) {
+        //根据id来查询菜品数据
+        Dish dish = dishMapper.getById(id);
+        //根据id来查询对应的口味数据
+        List<DishFlavor> dishFlavors = dishFlavorMapper.getByDishId(id);
+        //一起封装到VO中去
+        DishVO dishVO = new DishVO();
+        BeanUtils.copyProperties(dish, dishVO);
+        dishVO.setFlavors(dishFlavors);
+        return dishVO;
+    }
+
+    /**
+     * 根据id修改菜品的基本信息和口味信息
+     * @param dishDTO
+     */
+    @Override
+    public void updateWithFlavor(DishDTO dishDTO) {
+        //修改菜品表基本信息
+        Dish dish = new Dish();
+        BeanUtils.copyProperties(dishDTO, dish);
+        dishMapper.update(dish);
+        //修改口味表，先删除所有的口味信息，然后再插入你给的口味信息
+        dishFlavorMapper.DelteByDishId(dish.getId());
+
+        List<DishFlavor> flavors = dishDTO.getFlavors();
+        if (flavors != null && !flavors.isEmpty()) {
+            flavors.forEach((dishFlavor) -> {dishFlavor.setDishId(dishDTO.getId());});
+            dishFlavorMapper.insertBatch(flavors);
         }
     }
 }
