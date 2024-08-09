@@ -12,3 +12,14 @@ sky:
     access-key-secret: U6k1brOZ8gaOIXv3nXbulGTUzy6Pd7
     access-key-id: LTAI5tPeFLzsPPT8gG3LPW64
     endpoint: oss-cn-beijing.aliyuncs.com
+
+  redis:
+    host: localhost
+    port: 6379
+    password: 11223344
+    database: 10
+
+  wechat:
+    appid: abcdeK
+    secret: bb12ja
+

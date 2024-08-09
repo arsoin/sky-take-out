@@ -22,6 +22,11 @@ spring:
       connection-test-query: SELECT 1
   mvc:
     static-path-pattern: /files/**
+  redis:
+    host: ${sky.redis.host}
+    port: ${sky.redis.port}
+    password: ${sky.redis.password}
+    database: ${sky.redis.database}
 
 
 mybatis:
@@ -48,6 +53,12 @@ sky:
     admin-ttl: 7200000
     # 设置前端传递过来的令牌名称
     admin-token-name: token
+    user-secret-key: itheima
+    user-ttl: 7200000
+    user-token-name: authentication
+  wechat:
+    appid: ${sky.wechat.appid}
+    secret: ${sky.wechat.secret}
   alioss:
     access-key-id: ${sky.alioss.access-key-id}
     endpoint: ${sky.alioss.endpoint}

@@ -38,6 +38,8 @@ public class DishServiceImpl implements DishService {
 
     @Autowired
     private SetmealDishMapper setmealDishMapper;
+    @Autowired
+    private SetmealMapper setmealMapper;
 
     /**
      * 新增菜品,和对应的口味，这两个表
@@ -117,6 +119,7 @@ public class DishServiceImpl implements DishService {
 
     /**
      * 根据id来查询菜品和对应的口味数据
+     *
      * @param id
      * @return
      */
@@ -135,6 +138,7 @@ public class DishServiceImpl implements DishService {
 
     /**
      * 根据id修改菜品的基本信息和口味信息
+     *
      * @param dishDTO
      */
     @Override
@@ -148,13 +152,16 @@ public class DishServiceImpl implements DishService {
 
         List<DishFlavor> flavors = dishDTO.getFlavors();
         if (flavors != null && !flavors.isEmpty()) {
-            flavors.forEach((dishFlavor) -> {dishFlavor.setDishId(dishDTO.getId());});
+            flavors.forEach((dishFlavor) -> {
+                dishFlavor.setDishId(dishDTO.getId());
+            });
             dishFlavorMapper.insertBatch(flavors);
         }
     }
 
     /**
      * 菜品起售停售,如果是停售，还需要将当前套餐也停售
+     *
      * @param status
      * @param id
      */
@@ -167,23 +174,62 @@ public class DishServiceImpl implements DishService {
                 .build();
         dishMapper.update(dish);
 
-        if(status == StatusConstant.DISABLE){
+        if (status == StatusConstant.DISABLE) {
             //如果是停售，还需要将当前套餐也停售
             List<Long> dishIds = new ArrayList<>();
             dishIds.add(id);
             List<Long> setmealIds = setmealDishMapper.getSetmealIdByDish(dishIds);
             //说明有包含这个菜品的套餐
             if (setmealIds != null && !setmealIds.isEmpty()) {
-                for(Long setmealId : setmealIds){
-                    Setmeal setmeal =  Setmeal.builder()
-                                            .id(setmealId)
-                                            .status(StatusConstant.DISABLE)
-                                            .build();
-                    SetmealMapper.update(setmeal);
+                for (Long setmealId : setmealIds) {
+                    Setmeal setmeal = Setmeal.builder()
+                            .id(setmealId)
+                            .status(StatusConstant.DISABLE)
+                            .build();
+                    setmealMapper.update(setmeal);
                 }
             }
         }
+    }
 
+    /**
+     * 根据分类的id来查询这个分类下有哪些菜品
+     *
+     * @param categoryId
+     * @return
+     */
+    @Override
+    public List<Dish> list(Long categoryId) {
+        // select * from dish where category_id = id
+        Dish dish = Dish.builder()
+                .id(categoryId)
+                .status(StatusConstant.ENABLE)
+                .build();
+        return dishMapper.list(dish);
+    }
 
+    /**
+     * 条件查询菜品和口味
+     *
+     * @param dish
+     * @return
+     */
+    public List<DishVO> listWithFlavor(Dish dish) {
+        List<Dish> dishList = dishMapper.list(dish);
+
+        List<DishVO> dishVOList = new ArrayList<>();
+
+        for (Dish d : dishList) {
+            DishVO dishVO = new DishVO();
+            BeanUtils.copyProperties(d, dishVO);
+
+            //根据菜品id查询对应的口味
+            List<DishFlavor> flavors = dishFlavorMapper.getByDishId(d.getId());
+
+            dishVO.setFlavors(flavors);
+            dishVOList.add(dishVO);
+        }
+
+        return dishVOList;
     }
 }

@@ -99,4 +99,17 @@ public class DishController {
         dishService.startOrStop(status,id);
         return Result.success();
     }
+
+    /**
+     * 根据分类的id来查询这个分类下有哪些菜品
+     * @param id
+     * @return
+     */
+    @ApiOperation(value = "根据分类的id来查询这个分类下有哪些菜品")
+    @GetMapping("/list")
+    public Result<List<Dish>> list (Long id){
+        log.info("根据分类的id来查询这个分类下有哪些菜品,分类id:{}",id);
+        List<Dish> list =  dishService.list(id);
+        return Result.success(list);
+    }
 }
