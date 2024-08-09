@@ -11,9 +11,11 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/admin/dish")
@@ -23,6 +25,8 @@ public class DishController {
 
     @Autowired
     private DishService dishService;
+    @Autowired
+    RedisTemplate redisTemplate;
 
     /**
      * 新增菜品
@@ -35,7 +39,13 @@ public class DishController {
     public Result save(@RequestBody DishDTO dishDTO) {
         log.info("新增菜品:{}", dishDTO);
         dishService.saveWitFlavor(dishDTO);
+
+        //清理缓存,这里是可以精准清理的
+        String key = "dish_" + dishDTO.getCategoryId();
+        cleanCache(key);
         return Result.success();
+
+
     }
 
     /**
@@ -63,9 +73,14 @@ public class DishController {
     public Result delete(@RequestParam List<Long> ids) {
         log.info("菜品的批量删除：{}", ids);
         dishService.deleteBatch(ids);
+
+        //批量删除的话就直接把所有的缓存清理就行，不然得先查完数据库，知道了批量删除哪些才能清理
+        //获取到所有 dish_*  的key
+        //Set keys = redisTemplate.keys("dish_*");
+        //redisTemplate.delete(keys);
+        cleanCache("dish_*");
         return Result.success();
     }
-
     /**
      * 根据id来查询菜品
      *
@@ -90,13 +105,26 @@ public class DishController {
     public Result update(@RequestBody DishDTO dishDTO){
         log.info("修改菜品：{}",dishDTO);
         dishService.updateWithFlavor(dishDTO);
+        //修改操作也比较复杂，因为如果你修改了他的分类的话，那么不仅会影响dish表的结构，还会影响分类表的结构，因此这里直接清理缓存了
+        //获取到所有 dish_*  的key
+        //Set keys = redisTemplate.keys("dish_*");
+        //redisTemplate.delete(keys);
+        cleanCache("dish_*");
         return Result.success();
     }
+
+    /**
+     * 菜品起售停售
+     * @param status
+     * @param id
+     * @return
+     */
     @ApiOperation(value = "菜品起售停售")
     @PostMapping("/status/{status}")
     public Result updateStatus(@PathVariable Integer status,Long id){
         log.info("菜品起售停售：{},{}",status,id);
         dishService.startOrStop(status,id);
+        cleanCache("dish_*");
         return Result.success();
     }
 
@@ -111,5 +139,10 @@ public class DishController {
         log.info("根据分类的id来查询这个分类下有哪些菜品,分类id:{}",id);
         List<Dish> list =  dishService.list(id);
         return Result.success(list);
+    }
+
+    private void cleanCache(String patten){
+        Set keys = redisTemplate.keys(patten);
+        redisTemplate.delete(keys);
     }
 }
