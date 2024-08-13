@@ -22,4 +22,11 @@ sky:
   wechat:
     appid: abcdeK
     secret: bb12ja
+    mchid: "微信的商户号"
+    mch-serial-no: "对应的证书序列号"
+    api-v3-key: "解密的密钥"
+    we-chat-pay-cert-file-path: "平台证书"
+    notify-url: "支付成功的回调路径"
+    refund-notify-url: "支付失败的回调路径"
+    private-key-file-path: "私钥文件，一般是写路径"
 

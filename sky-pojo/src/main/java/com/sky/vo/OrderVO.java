@@ -17,6 +17,6 @@ public class OrderVO extends Orders implements Serializable {
     private String orderDishes;
 
     //订单详情
-    private List<OrderSubmitVO> orderDetailList;
+    private List<OrderDetail> orderDetailList;
 
 }

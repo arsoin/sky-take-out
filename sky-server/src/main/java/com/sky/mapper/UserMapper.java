@@ -21,4 +21,11 @@ public interface UserMapper {
      */
     void insert(User user);
 
+    /**
+     * 根据主键来查信息
+     * @param userId
+     * @return
+     */
+    @Select("select * from user where id = #{userId}")
+    User getById(Long userId);
 }
