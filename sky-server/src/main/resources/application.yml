@@ -66,12 +66,15 @@ sky:
     notifyUrl: ${sky.wechat.notify-url}
     refundNotifyUrl: ${sky.wechat.refund-notify-url}
     privateKeyFilePath: ${sky.wechat.private-key-file-path}
-
   alioss:
     access-key-id: ${sky.alioss.access-key-id}
     endpoint: ${sky.alioss.endpoint}
     access-key-secret: ${sky.alioss.access-key-secret}
     bucket-name: ${sky.alioss.bucket-name}
+  shop:
+    address: ${sky.shop.address}
+  baidu:
+    ak: ${sky.baidu.ak}
 file:
   upload-dir: E:/images
 

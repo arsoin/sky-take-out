@@ -29,4 +29,8 @@ sky:
     notify-url: "支付成功的回调路径"
     refund-notify-url: "支付失败的回调路径"
     private-key-file-path: "私钥文件，一般是写路径"
+  baidu:
+    ak: "百度开放地图拿到的ak码"
+  shop:
+    address: "自己店铺的地址，在百度上显示"
 
