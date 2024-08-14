@@ -43,6 +43,20 @@
         </set>
         where id = #{id}
     </update>
+    <select id="sumByMap" resultType="java.lang.Double">
+        select sum(amount) from orders
+        <where>
+            <if test="begin != null">
+                and order_time &gt; #{begin}    /*这里大于符号使用他的转义字符， &gt;  比较合理 */
+            </if>
+            <if test="end != null">
+                and order_time &lt; #{end}
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+        </where>
+    </select>
 
     <select id="pageQuery" resultType="Orders">
         select * from orders
@@ -68,5 +82,7 @@
         </where>
         order by order_time desc
     </select>
+
+
 
 </mapper>
