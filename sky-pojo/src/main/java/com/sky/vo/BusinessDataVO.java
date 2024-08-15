@@ -20,7 +20,7 @@ public class BusinessDataVO implements Serializable {
 
     private Integer validOrderCount;//有效订单数
 
-    private Double orderCompletionRate;//订单完成率
+    private Double orderCompletionRate;//订单完成率  
 
     private Double unitPrice;//平均客单价
 
