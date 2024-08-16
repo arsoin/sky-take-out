@@ -1,10 +1,12 @@
 package com.sky.service.impl;
 
+import com.sky.dto.GoodsSalesDTO;
 import com.sky.entity.Orders;
 import com.sky.mapper.OrderMapper;
 import com.sky.mapper.UserMapper;
 import com.sky.service.ReportService;
 import com.sky.vo.OrderReportVO;
+import com.sky.vo.SalesTop10ReportVO;
 import com.sky.vo.TurnoverReportVO;
 import com.sky.vo.UserReportVO;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -180,5 +183,39 @@ public class ReportServiceImpl implements ReportService {
         map.put("end",end);
         map.put("status",status);
         return orderMapper.countByMap(map);
+    }
+
+    /**
+     * 销量排名top10
+     * @param begin
+     * @param end
+     * @return
+     */
+    @Override
+    public SalesTop10ReportVO getSalesTop10(LocalDate begin, LocalDate end) {
+        //查询orders 下状态完成 且 orders_detail 中销量最多的菜品
+        // //商品名称列表，以逗号分隔，例如：鱼香肉丝,宫保鸡丁,水煮鱼
+        // select od.name as name,sum(od.number) as number from order_detail as od , orders as o
+        // where od.order_id = o.id and o.id = 5 and o.create_time > ? and o.create_time < ?
+        // group by od.name order by number desc limit 0,10;
+        LocalDateTime beginTime = LocalDateTime.of(begin, LocalTime.MIN);
+        LocalDateTime endTime = LocalDateTime.of(end, LocalTime.MAX);
+
+        List<String> dishNameList = new ArrayList<>();
+        List<Integer> dishSaleList = new ArrayList<>();
+        List<GoodsSalesDTO> salesTop10List = orderMapper.getSalesTop10(beginTime, endTime);
+
+        //这里是用stream流来完成遍历和组装到集合的
+        //List<String> names = salesTop10List.stream().map(GoodsSalesDTO::getName).collect(Collectors.toList());
+        //List<Integer> numbers = salesTop10List.stream().map(GoodsSalesDTO::getNumber).collect(Collectors.toList());
+
+        for(GoodsSalesDTO salesTop10 : salesTop10List){
+            dishNameList.add(salesTop10.getName());
+            dishSaleList.add(salesTop10.getNumber());
+        }
+        return SalesTop10ReportVO.builder()
+                .nameList(StringUtils.join(dishNameList,","))
+                .numberList(StringUtils.join(dishSaleList,","))
+                .build();
     }
 }

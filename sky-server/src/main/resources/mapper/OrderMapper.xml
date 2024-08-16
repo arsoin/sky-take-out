@@ -74,10 +74,10 @@
                 and status = #{status}
             </if>
             <if test="beginTime != null">
-                and order_time &gt;= #{beginTime}
+                and order_time &gt; #{beginTime}
             </if>
             <if test="endTime != null">
-                and order_time &lt;= #{endTime}
+                and order_time &lt; #{endTime}
             </if>
         </where>
         order by order_time desc
@@ -95,6 +95,23 @@
                 and status = #{status}
             </if>
         </where>
+    </select>
+    <select id="getSalesTop10" resultType="com.sky.dto.GoodsSalesDTO">
+        select od.name as name,sum(od.number) as number
+        rom order_detail as od , orders as o
+        <where>
+            od.order_id = o.id
+            and o.id = 5
+            <if test="create_time != null">
+                and o.create_time &gt; #{begin}
+            </if>
+            <if test="create_time != null">
+                and o.create_time &lt; #{end}
+            </if>
+        </where>
+        group by od.name
+        order by number
+        desc limit 0,10;
     </select>
 
 
