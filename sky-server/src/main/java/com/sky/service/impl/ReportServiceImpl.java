@@ -5,15 +5,20 @@ import com.sky.entity.Orders;
 import com.sky.mapper.OrderMapper;
 import com.sky.mapper.UserMapper;
 import com.sky.service.ReportService;
-import com.sky.vo.OrderReportVO;
-import com.sky.vo.SalesTop10ReportVO;
-import com.sky.vo.TurnoverReportVO;
-import com.sky.vo.UserReportVO;
+import com.sky.service.WorkspaceService;
+import com.sky.vo.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -31,6 +36,9 @@ public class ReportServiceImpl implements ReportService {
     private OrderMapper orderMapper;
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    WorkspaceService workspaceService;
 
 
     /**
@@ -217,5 +225,70 @@ public class ReportServiceImpl implements ReportService {
                 .nameList(StringUtils.join(dishNameList,","))
                 .numberList(StringUtils.join(dishSaleList,","))
                 .build();
+    }
+
+    /**
+     * 导出excel 报表
+     * @param response
+     */
+    @Override
+    public void exportBusinessData(HttpServletResponse response) {
+        //查询数据库，获取营业数据 -- 查询最近30天的运行数据
+        LocalDate begin = LocalDate.now().minusDays(30);
+        LocalDate end = LocalDate.now().plusDays(1);
+        BusinessDataVO businessData = workspaceService.getBusinessData(
+                LocalDateTime.of(begin, LocalTime.MIN),
+                LocalDateTime.of(end, LocalTime.MAX));
+        //把查询出来的数据通过POI写入到excel文件中
+        //获取到类文件，获取到类加载器，获取到类路径下的文件
+        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("template/运营数据报表模板.xlsx");
+        try {
+            //基于模板文件创建一个新的excel文件
+            XSSFWorkbook excel = new XSSFWorkbook(inputStream);
+            //获取sheet标签页
+            XSSFSheet sheet = excel.getSheetAt(0);
+            //填充是哪个时间段日期的报表
+            sheet.getRow(1).getCell(1).setCellValue("时间:"+begin+"至"+end);
+            //获取第四行
+            XSSFRow row = sheet.getRow(3);
+            //设置营业额
+            row.getCell(2).setCellValue(businessData.getTurnover());
+            //设置完成率
+            row.getCell(4).setCellValue(businessData.getOrderCompletionRate());
+            //设置新增用户数
+            row.getCell(6).setCellValue(businessData.getNewUsers());
+            //获取第5行
+            row = sheet.getRow(4);
+            //获取有效订单数
+            row.getCell(2).setCellValue(businessData.getValidOrderCount());
+            //获取平均客单价
+            row.getCell(4).setCellValue(businessData.getUnitPrice());
+
+            //填充明细数据
+            for (int i = 0; i < 30; i++) {
+                begin = begin.plusDays(i);
+                //当天的营业数据
+                BusinessDataVO businessData1 = workspaceService.getBusinessData(
+                        LocalDateTime.of(begin, LocalTime.MIN),
+                        LocalDateTime.of(begin, LocalTime.MAX));
+                //获得某一行
+                row = sheet.getRow(i + 7);
+                row.getCell(1).setCellValue(begin.toString());
+                row.getCell(2).setCellValue(businessData1.getTurnover());
+                row.getCell(3).setCellValue(businessData1.getValidOrderCount());
+                row.getCell(4).setCellValue(businessData1.getOrderCompletionRate());
+                row.getCell(5).setCellValue(businessData1.getUnitPrice());
+                row.getCell(6).setCellValue(businessData1.getNewUsers());
+            }
+
+            //通过输出流把excel文件下载到客户端浏览器
+            ServletOutputStream outputStream = response.getOutputStream();
+            excel.write(outputStream);
+            excel.close();
+            outputStream.close();
+            inputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
